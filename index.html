@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crate Renamer // CARTER Edition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Navigation / Header -->
+    <header class="app-header">
+      <div class="logo-group">
+        <div class="logo-icon">🎛️</div>
+        <div>
+          <h1 class="app-title">CRATE RENAMER <span class="badge-edition">CARTER EDITION</span></h1>
+          <p class="app-subtitle">Intuitive batch renamer for DJ crates, track packs & PC files</p>
+        </div>
+      </div>
+      <div class="header-badges">
+        <div class="carter-status-pill" id="carterStatusBadge">
+          <span class="pulsing-dot"></span>
+          <span class="carter-badge-text">CARTER-HERE: ENFORCED 🔒</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btnLoadDemo">
+          ⚡ Load Demo Tracks
+        </button>
+        <button class="btn btn-ghost btn-sm" id="btnResetAll" title="Clear all files and reset rules">
+          🔄 Reset
+        </button>
+      </div>
+    </header>
+
+    <!-- Notification Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Main Workspace Grid -->
+    <main class="workspace-grid">
+      <!-- Left Sidebar: Controls & Rules -->
+      <section class="panel panel-controls">
+        <div class="panel-header">
+          <h2>⚙️ Renaming Rules</h2>
+          <span class="step-indicator">Step 1 & 2</span>
+        </div>
+
+        <div class="controls-content">
+          <!-- Preset Selector -->
+          <div class="control-group">
+            <label for="presetSelect" class="control-label">Quick Presets</label>
+            <select id="presetSelect" class="form-select">
+              <option value="custom">Custom Configuration</option>
+              <option value="dj-clean">DJ Clean (Remove web junk, fix spacing)</option>
+              <option value="numbered">Track Numbering (01, 02, 03...)</option>
+              <option value="uppercase">ALL CAPS Club Style</option>
+              <option value="titlecase">Title Case Standardizer</option>
+              <option value="crate-pack">Crate Pack Tag [CRATE]</option>
+            </select>
+          </div>
+
+          <!-- The Unconditional CARTER Rule Box -->
+          <div class="mandatory-card" id="mandatoryCarterCard">
+            <div class="mandatory-header">
+              <div class="mandatory-title">
+                <span class="icon">⚡</span>
+                <strong>MANDATORY: CARTER-HERE</strong>
+              </div>
+              <label class="toggle-switch" title="You cannot disable this">
+                <input type="checkbox" id="carterToggle" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <p class="mandatory-desc">
+              Every file is automatically stamped with <code>CARTER-HERE</code> before its extension. Whether you want it or not.
+            </p>
+            <div class="mandatory-options">
+              <label for="carterSeparator">Style / Separator:</label>
+              <select id="carterSeparator" class="form-select form-select-sm">
+                <option value="-CARTER-HERE">-CARTER-HERE</option>
+                <option value="_CARTER-HERE">_CARTER-HERE</option>
+                <option value=" CARTER-HERE"> [Space] CARTER-HERE</option>
+                <option value=".CARTER-HERE">.CARTER-HERE</option>
+                <option value="CARTER-HERE">CARTER-HERE (No Sep)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Basic Modifiers: Prefix & Suffix -->
+          <div class="control-grid-2">
+            <div class="control-group">
+              <label for="prefixInput" class="control-label">Add Prefix</label>
+              <input type="text" id="prefixInput" class="form-input" placeholder="e.g. [DEEP] ">
+            </div>
+            <div class="control-group">
+              <label for="suffixInput" class="control-label">Add Suffix (Before CARTER)</label>
+              <input type="text" id="suffixInput" class="form-input" placeholder="e.g. -Edit">
+            </div>
+          </div>
+
+          <!-- Find & Replace -->
+          <div class="accordion-item open">
+            <div class="accordion-header">
+              <span>🔍 Find & Replace</span>
+            </div>
+            <div class="accordion-body">
+              <div class="control-grid-2">
+                <div class="control-group">
+                  <label for="findInput" class="control-label">Find text</label>
+                  <input type="text" id="findInput" class="form-input" placeholder="Text to remove/replace">
+                </div>
+                <div class="control-group">
+                  <label for="replaceInput" class="control-label">Replace with</label>
+                  <input type="text" id="replaceInput" class="form-input" placeholder="New text (leave blank to remove)">
+                </div>
+              </div>
+              <div class="checkbox-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="matchCase"> Match Case
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="useRegex"> RegEx
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Smart Cleaners -->
+          <div class="accordion-item open">
+            <div class="accordion-header">
+              <span>🧹 Text Cleaning & Case</span>
+            </div>
+            <div class="accordion-body">
+              <div class="checkbox-grid">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="cleanUnderscores"> Replace _ with Space
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="cleanHyphens"> Replace - with Space
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="stripWebTags" checked> Remove [320kbps], [FLAC], URLs
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="stripLeadingNumbers"> Strip Leading Numbers (01., 1 -)
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="trimSpaces" checked> Trim Extra Spaces
+                </label>
+              </div>
+
+              <div class="control-group mt-3">
+                <label for="letterCase" class="control-label">Letter Case Transformation</label>
+                <select id="letterCase" class="form-select">
+                  <option value="preserve">Preserve Original Case</option>
+                  <option value="titlecase">Title Case (e.g. Midnight City)</option>
+                  <option value="uppercase">UPPERCASE (e.g. MIDNIGHT CITY)</option>
+                  <option value="lowercase">lowercase (e.g. midnight city)</option>
+                  <option value="kebab">kebab-case (e.g. midnight-city)</option>
+                  <option value="snake">snake_case (e.g. midnight_city)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sequential Numbering -->
+          <div class="accordion-item">
+            <div class="accordion-header">
+              <span>🔢 Numbering / Sequence</span>
+            </div>
+            <div class="accordion-body">
+              <label class="checkbox-label mb-2">
+                <input type="checkbox" id="enableNumbering"> Enable Sequential Numbering
+              </label>
+              <div class="control-grid-3">
+                <div class="control-group">
+                  <label for="numStart" class="control-label">Start at</label>
+                  <input type="number" id="numStart" class="form-input" value="1" min="0">
+                </div>
+                <div class="control-group">
+                  <label for="numPadding" class="control-label">Padding</label>
+                  <select id="numPadding" class="form-select">
+                    <option value="1">1, 2, 3</option>
+                    <option value="2" selected>01, 02, 03</option>
+                    <option value="3">001, 002, 003</option>
+                  </select>
+                </div>
+                <div class="control-group">
+                  <label for="numPosition" class="control-label">Position</label>
+                  <select id="numPosition" class="form-select">
+                    <option value="prefix">Prefix (01 - Name)</option>
+                    <option value="suffix">Suffix (Name - 01)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Area: Files & Live Preview -->
+      <section class="panel panel-preview">
+        <!-- Source Selection Tabs -->
+        <div class="tabs-header">
+          <div class="tabs-nav">
+            <button class="tab-btn active" data-tab="files-tab">📁 Files & Crates</button>
+            <button class="tab-btn" data-tab="text-tab">📝 Text / Tracklist Mode</button>
+          </div>
+          <div class="file-summary" id="fileStatsSummary">
+            0 files selected
+          </div>
+        </div>
+
+        <!-- Tab 1: Real Files Mode -->
+        <div class="tab-content active" id="files-tab">
+          <!-- Dropzone -->
+          <div class="dropzone" id="dropzone">
+            <div class="dropzone-inner">
+              <div class="drop-icon">📂</div>
+              <h3>Drag & drop audio files or folders here</h3>
+              <p>Supports MP3, WAV, FLAC, AIFF, M4A, ZIP, or any crate files</p>
+              <div class="drop-actions">
+                <label class="btn btn-primary">
+                  <span>Browse Files</span>
+                  <input type="file" id="filePicker" multiple hidden>
+                </label>
+                <button class="btn btn-secondary" id="btnPickFolder" title="Directly rename files inside a folder on your PC!">
+                  💻 Open Local PC Folder
+                </button>
+              </div>
+              <div class="dropzone-tip" id="fsaTip">
+                💡 <strong>Tip:</strong> "Open Local PC Folder" can rename files directly in-place on your drive using modern Web File System API!
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Bar (Above Table) -->
+          <div class="preview-toolbar" id="previewToolbar" style="display: none;">
+            <div class="search-filter-box">
+              <input type="text" id="tableFilterInput" class="form-input form-input-sm" placeholder="🔎 Filter files...">
+            </div>
+            <div class="toolbar-actions">
+              <button class="btn btn-ghost btn-sm" id="btnSortAZ">🔤 A-Z</button>
+              <button class="btn btn-ghost btn-sm" id="btnClearList">🗑️ Clear</button>
+              
+              <!-- Action Button for In-Place Direct Rename if Directory was picked -->
+              <button class="btn btn-success" id="btnInPlaceRename" style="display: none;">
+                ⚡ Rename Files Directly on PC
+              </button>
+
+              <!-- Action Button for ZIP Download -->
+              <button class="btn btn-primary" id="btnDownloadZip">
+                📦 Download All as Renamed ZIP
+              </button>
+            </div>
+          </div>
+
+          <!-- Table Container -->
+          <div class="table-card" id="tableCard" style="display: none;">
+            <div class="table-scroll">
+              <table class="preview-table">
+                <thead>
+                  <tr>
+                    <th style="width: 40px;">#</th>
+                    <th style="width: 40%;">Original File Name</th>
+                    <th style="width: 28px;" class="arrow-col"></th>
+                    <th>Renamed Preview (Live)</th>
+                    <th style="width: 80px;">Size</th>
+                    <th style="width: 70px;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="previewTableBody">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Pure Text / Tracklist Mode -->
+        <div class="tab-content" id="text-tab">
+          <div class="text-mode-layout">
+            <div class="text-mode-column">
+              <div class="text-column-header">
+                <label for="rawTextarea" class="control-label">Raw Track / Crate List (One per line)</label>
+                <button class="btn btn-ghost btn-sm" id="btnPasteSampleText">Paste Sample List</button>
+              </div>
+              <textarea id="rawTextarea" class="form-textarea" placeholder="Paste your tracklist, crate items, or filenames here:
+01_calvin_harris_-_summer_[320kbps].mp3
+daft_punk_one_more_time_remix.wav
+fisher_losing_it_extended_mix.aiff"></textarea>
+            </div>
+
+            <div class="text-mode-column">
+              <div class="text-column-header">
+                <label for="resultTextarea" class="control-label">Renamed Output (With CARTER-HERE)</label>
+                <button class="btn btn-primary btn-sm" id="btnCopyTextOutput">📋 Copy All</button>
+              </div>
+              <textarea id="resultTextarea" class="form-textarea" readonly placeholder="Renamed output will appear here live..."></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Footer -->
+    <footer class="app-footer">
+      <div>
+        <span>Crate Renamer // CARTER-HERE Guarantee &copy; 2026</span>
+        <span class="footer-separator">•</span>
+        <span>Runs 100% locally & securely in your browser</span>
+      </div>
+      <div class="carter-guarantee">
+        <span>🔒 "CARTER-HERE" is permanently appended to all outputs. No exceptions.</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
